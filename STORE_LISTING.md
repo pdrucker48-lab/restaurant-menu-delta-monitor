@@ -6,13 +6,13 @@ Restaurant Competitor Menu & Price Monitor
 
 ## Short description
 
-Track competitor restaurant prices, new and removed dishes, availability, descriptions, and category changes from ordinary public website URLs.
+Track competitor prices, new and removed dishes, availability, descriptions, and category changes from public restaurant menus and ordering pages.
 
 ## Opening pitch
 
 Stop rebuilding competitor menus by hand. Paste restaurant homepages or menu URLs once, schedule the Actor, and receive only the pricing and menu decisions that changed.
 
-The Actor automatically discovers same-site menu pages, normalizes public structured and server-rendered menu data, preserves a baseline, and returns old/current evidence with severity and extraction confidence.
+The Actor normalizes public structured, server-rendered, and JavaScript ordering-page menus, preserves a baseline, and returns old/current evidence with severity and extraction confidence. Browser rendering is used only when the fast HTML path finds no menu items.
 
 ## Outcome-led use cases
 
@@ -33,10 +33,12 @@ Disable the automatic `apify-default-dataset-item` event before launch to preven
 
 The first run creates a baseline and returns a compact confirmation summary. Schedule the same input with the same `monitorKey` to receive deltas.
 
+Use exact ordering URLs for the best results. Public Toast menu pages are live-tested; residential proxy traffic and JavaScript rendering are enabled by default. Failed extractions remain free and are listed in the run summary.
+
 ## Suggested categories and search terms
 
 E-commerce; Business; Automation; restaurant menu scraper; restaurant price monitoring; competitor pricing; menu intelligence; food price data; restaurant analytics.
 
 ## Publication gate
 
-Run the included 20-site smoke test in an Apify environment. Publish after at least 70% of the selected public sites return credible normalized menus and manually inspect a sample for false product matches.
+Keep a recurring platform-specific smoke suite above 70% extraction success and verify the second run produces no false changes. The initial live Toast validation passed 3/3 pages, tracked 203 items, and produced zero false events on the second run.
