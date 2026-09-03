@@ -26,10 +26,10 @@
     "currencyFallback": {
       "title": "Fallback currency",
       "type": "string",
+      "description": "Three-letter ISO currency code used when a menu price has no explicit currency.",
       "default": "USD",
       "editor": "textfield",
-      "minLength": 3,
-      "maxLength": 3
+      "pattern": "^[A-Z]{3}$"
     },
     "emitBaseline": {
       "title": "Emit baseline menu items",
@@ -91,6 +91,7 @@
     "requestTimeoutSecs": {
       "title": "Request timeout",
       "type": "integer",
+      "description": "Maximum seconds to wait for each public restaurant page request.",
       "default": 25,
       "minimum": 5,
       "maximum": 60,
@@ -99,6 +100,7 @@
     "maxConcurrency": {
       "title": "Maximum concurrency",
       "type": "integer",
+      "description": "Maximum number of restaurant websites checked at the same time.",
       "default": 5,
       "minimum": 1,
       "maximum": 20,
