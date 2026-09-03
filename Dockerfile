@@ -1,4 +1,4 @@
-FROM apify/actor-node:22
+FROM apify/actor-node-playwright-chrome:24-1.58.1
 
 COPY package*.json ./
 RUN npm --quiet set progress=false \
