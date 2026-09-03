@@ -41,4 +41,4 @@ E-commerce; Business; Automation; restaurant menu scraper; restaurant price moni
 
 ## Publication gate
 
-Keep a recurring platform-specific smoke suite above 70% extraction success and verify the second run produces no false changes. The initial live Toast validation passed 3/3 pages, tracked 203 items, and produced zero false events on the second run.
+Keep a recurring platform-specific smoke suite at or above 70% extraction success and verify the second run produces no false changes. The live 10-site Toast suite parsed 7/10 menus and 998 items on its first run, then 8/10 on the immediate second run with zero raw or matched changes.
