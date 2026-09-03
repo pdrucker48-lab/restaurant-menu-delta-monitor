@@ -77,8 +77,7 @@
       "description": "Optional event allowlist. Empty means every change type.",
       "editor": "stringList",
       "items": {
-        "type": "string",
-        "enum": ["ITEM_ADDED", "ITEM_REMOVED", "PRICE_UP", "PRICE_DOWN", "DESCRIPTION_CHANGED", "CATEGORY_CHANGED", "AVAILABILITY_CHANGED"]
+        "type": "string"
       },
       "default": []
     },
