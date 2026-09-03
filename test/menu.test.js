@@ -7,6 +7,7 @@ import {
   filterChanges,
   normalizePrice,
 } from '../src/lib/menu.js';
+import { extractRenderedTextMenu } from '../src/lib/html-menu.js';
 
 test('extracts nested MenuSection and MenuItem JSON-LD', () => {
   const html = `<script type="application/ld+json">${JSON.stringify({
@@ -59,6 +60,16 @@ test('extracts likely menu items from public application state', () => {
     sourceUrl: null,
     source: 'embedded-json',
   }]);
+});
+
+test('extracts menu items from rendered ordering buttons', () => {
+  const html = `<section><h2>Sandwiches</h2><button data-testid="menu-item-1"><h3>Turkey Club</h3><p>Turkey, bacon, lettuce</p><span>$14.95</span></button></section>`;
+  const items = extractRenderedTextMenu(html, 'USD');
+  assert.equal(items.length, 1);
+  assert.equal(items[0].name, 'Turkey Club');
+  assert.equal(items[0].priceCents, 1495);
+  assert.equal(items[0].category, 'Sandwiches');
+  assert.equal(items[0].source, 'rendered-text');
 });
 
 test('emits price, description, category, add and remove events', () => {
