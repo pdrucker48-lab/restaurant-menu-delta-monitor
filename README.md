@@ -11,13 +11,14 @@ Turn ordinary restaurant URLs into a recurring competitor-intelligence feed. The
 
 ## Paste URLs, not scraper instructions
 
-Input a restaurant homepage or exact menu page. The Actor follows the strongest same-site menu links and extracts from:
+Input a restaurant homepage or exact menu page. Exact public ordering URLs give the highest success rate. The Actor follows same-site menu links and extracts from:
 
 - Schema.org `Menu`, `MenuSection`, `MenuItem`, and `Product` JSON-LD;
 - public application-state JSON embedded in the page;
-- common server-rendered menu markup and microdata.
+- common server-rendered menu markup and microdata;
+- JavaScript-rendered ordering pages, including public Toast menus, through an automatic browser fallback.
 
-No login, browser automation, access-control bypass, OCR, or AI billing is used.
+No restaurant login, access-control bypass, OCR, or AI billing is used. Modern ordering pages commonly reject data-center requests, so the default input uses Apify residential proxy traffic and only launches a browser when the faster HTML path returns no items.
 
 ## Intelligence events
 
@@ -42,17 +43,19 @@ The first run always writes one `BASELINE_SUMMARY` per successfully parsed resta
 ```json
 {
   "restaurantUrls": [
-    "https://restaurant-a.example/",
-    "https://restaurant-b.example/menu"
+    "https://famousrestaurant.toast.site/order/famous-restaurant",
+    "https://restaurantconstance.toast.site/order"
   ],
   "monitorKey": "toronto-burger-competitors",
   "currencyFallback": "CAD",
-  "maxPagesPerRestaurant": 3,
+  "maxPagesPerRestaurant": 1,
   "minimumPriceChangePercent": 2,
   "keywords": ["burger", "chicken", "combo"],
   "emitFullSnapshot": false
 }
 ```
+
+For Toast and other exact ordering URLs, start with one page per restaurant. Increase `maxPagesPerRestaurant` only when beginning from a homepage. Failed restaurants are reported in the run summary and are not charged.
 
 ## Recommended schedule
 
@@ -77,7 +80,7 @@ npm test
 npm run smoke
 ```
 
-The unit suite covers JSON-LD, public application-state extraction, international prices, all change classes, severity, and filtering. The optional smoke test checks 20 public restaurant sites and requires a 70% parse rate.
+The unit suite covers JSON-LD, public application-state extraction, rendered ordering rows, international prices, all change classes, severity, and filtering. The live Apify validation baseline parsed 203 items across three public Toast menus (92, 36, and 75 items), and an immediate second run checked all three with zero false changes.
 
 ## Responsible use
 
