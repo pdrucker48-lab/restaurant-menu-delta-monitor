@@ -1,0 +1,11 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Menu changes and run summary",
+  "properties": {
+    "results": {
+      "type": "string",
+      "title": "Menu-change records",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    }
+  }
+}

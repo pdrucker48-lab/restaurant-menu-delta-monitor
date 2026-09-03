@@ -1,0 +1,21 @@
+# Optional live smoke-test set. Individual sites can block data-center traffic.
+https://www.chipotle.com/menu
+https://www.mcdonalds.com/us/en-us/full-menu.html
+https://www.panerabread.com/en-us/menu.html
+https://www.fiveguys.com/menu
+https://www.in-n-out.com/menu
+https://shakeshack.com/menu
+https://www.sweetgreen.com/menu
+https://www.subway.com/en-us/menunutrition/menu
+https://www.tacobell.com/food
+https://www.wendys.com/en-us/menu
+https://www.chick-fil-a.com/menu
+https://www.dennys.com/food
+https://www.ihop.com/en/menu
+https://www.pandaexpress.com/menu
+https://www.noodles.com/menu
+https://www.olivegarden.com/menu
+https://www.redlobster.com/menu
+https://www.outback.com/menu
+https://www.dominos.com/en/pages/order/menu
+https://www.papajohns.com/order/menu

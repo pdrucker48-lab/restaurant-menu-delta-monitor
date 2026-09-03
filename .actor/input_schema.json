@@ -1,0 +1,109 @@
+{
+  "title": "Restaurant Competitor Menu & Price Monitor input",
+  "description": "Paste public restaurant homepages or menu URLs. The Actor discovers same-site menu pages, creates a baseline, and emits only matched changes.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "restaurantUrls": {
+      "title": "Restaurant menu URLs",
+      "type": "array",
+      "description": "Restaurant homepages or exact menu URLs. Same-site menu links are discovered automatically.",
+      "editor": "stringList",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 500
+    },
+    "monitorKey": {
+      "title": "Monitor key",
+      "type": "string",
+      "description": "Stable key for this watchlist. Reuse it on scheduled runs to compare against the same baseline.",
+      "default": "default",
+      "editor": "textfield",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "currencyFallback": {
+      "title": "Fallback currency",
+      "type": "string",
+      "default": "USD",
+      "editor": "textfield",
+      "minLength": 3,
+      "maxLength": 3
+    },
+    "emitBaseline": {
+      "title": "Emit baseline menu items",
+      "type": "boolean",
+      "description": "When enabled, the first run emits BASELINE_ITEM rows. The baseline is always stored.",
+      "default": false,
+      "editor": "checkbox"
+    },
+    "emitFullSnapshot": {
+      "title": "Emit complete menu snapshots",
+      "type": "boolean",
+      "description": "Also write every normalized menu item on every run. Leave off for change-only monitoring.",
+      "default": false,
+      "editor": "checkbox"
+    },
+    "maxPagesPerRestaurant": {
+      "title": "Pages per restaurant",
+      "type": "integer",
+      "description": "Maximum same-site pages fetched while discovering the menu.",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 8,
+      "editor": "number"
+    },
+    "minimumPriceChangePercent": {
+      "title": "Minimum price movement",
+      "type": "number",
+      "description": "Suppress smaller price changes from the output and webhook. Other event types are unaffected.",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "editor": "number"
+    },
+    "keywords": {
+      "title": "Dish/category keywords",
+      "type": "array",
+      "description": "Optional watchlist such as burger, chicken, lunch, or vegan. Empty means all items.",
+      "editor": "stringList",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "eventTypes": {
+      "title": "Change types",
+      "type": "array",
+      "description": "Optional event allowlist. Empty means every change type.",
+      "editor": "stringList",
+      "items": {
+        "type": "string",
+        "enum": ["ITEM_ADDED", "ITEM_REMOVED", "PRICE_UP", "PRICE_DOWN", "DESCRIPTION_CHANGED", "CATEGORY_CHANGED", "AVAILABILITY_CHANGED"]
+      },
+      "default": []
+    },
+    "webhookUrl": {
+      "title": "Webhook URL",
+      "type": "string",
+      "description": "Optional HTTPS endpoint that receives one run summary plus all changes.",
+      "editor": "textfield"
+    },
+    "requestTimeoutSecs": {
+      "title": "Request timeout",
+      "type": "integer",
+      "default": 25,
+      "minimum": 5,
+      "maximum": 60,
+      "editor": "number"
+    },
+    "maxConcurrency": {
+      "title": "Maximum concurrency",
+      "type": "integer",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 20,
+      "editor": "number"
+    }
+  },
+  "required": ["restaurantUrls", "monitorKey"]
+}

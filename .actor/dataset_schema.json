@@ -1,0 +1,46 @@
+{
+  "actorSpecification": 1,
+  "fields": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "recordType": { "type": "string", "title": "Record type" },
+      "eventType": { "type": "string", "title": "Change type" },
+      "restaurantUrl": { "type": "string", "title": "Restaurant menu URL" },
+      "restaurantName": { "type": ["string", "null"], "title": "Restaurant" },
+      "itemName": { "type": "string", "title": "Menu item" },
+      "category": { "type": "string", "title": "Menu category" },
+      "previous": { "type": ["object", "null"], "title": "Previous item" },
+      "current": { "type": ["object", "null"], "title": "Current item" },
+      "priceChangePercent": { "type": ["number", "null"], "title": "Price change percent" },
+      "absolutePriceChangeCents": { "type": ["number", "null"], "title": "Absolute price change" },
+      "severity": { "type": "string", "title": "Severity" },
+      "extractionConfidence": { "type": "string", "title": "Extraction confidence" },
+      "detectedAt": { "type": "string", "title": "Detection time" },
+      "fingerprint": { "type": "string", "title": "Stable event fingerprint" }
+    }
+  },
+  "views": {
+    "overview": {
+      "title": "Menu changes",
+      "transformation": {
+        "fields": ["severity", "eventType", "restaurantName", "restaurantUrl", "itemName", "category", "previous", "current", "priceChangePercent", "absolutePriceChangeCents", "extractionConfidence", "detectedAt"]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "severity": { "label": "Priority", "format": "text" },
+          "eventType": { "label": "Change", "format": "text" },
+          "restaurantName": { "label": "Restaurant", "format": "text" },
+          "restaurantUrl": { "label": "Restaurant", "format": "link" },
+          "itemName": { "label": "Item", "format": "text" },
+          "category": { "label": "Category", "format": "text" },
+          "priceChangePercent": { "label": "Price %", "format": "number" },
+          "absolutePriceChangeCents": { "label": "Price cents", "format": "number" },
+          "extractionConfidence": { "label": "Confidence", "format": "text" },
+          "detectedAt": { "label": "Detected", "format": "date" }
+        }
+      }
+    }
+  }
+}

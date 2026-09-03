@@ -1,0 +1,16 @@
+{
+  "restaurantUrls": [
+    "https://restaurant.example/menu"
+  ],
+  "monitorKey": "competitor-watch",
+  "currencyFallback": "USD",
+  "maxPagesPerRestaurant": 3,
+  "minimumPriceChangePercent": 2,
+  "keywords": [],
+  "eventTypes": [],
+  "emitBaseline": false,
+  "emitFullSnapshot": false,
+  "webhookUrl": null,
+  "requestTimeoutSecs": 25,
+  "maxConcurrency": 5
+}

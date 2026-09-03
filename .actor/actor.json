@@ -1,0 +1,17 @@
+{
+  "actorSpecification": 1,
+  "name": "restaurant-menu-delta-monitor",
+  "title": "Restaurant Competitor Menu & Price Monitor",
+  "description": "Track competitor restaurant menus, price changes, new dishes, removals, availability, and category moves from ordinary public website URLs.",
+  "version": "1.1",
+  "dockerfile": "../Dockerfile",
+  "input": "./input_schema.json",
+  "output": "./output_schema.json",
+  "changelog": "./CHANGELOG.md",
+  "defaultMemoryMbytes": 256,
+  "minMemoryMbytes": 128,
+  "maxMemoryMbytes": 512,
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  }
+}
