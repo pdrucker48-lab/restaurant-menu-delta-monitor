@@ -1,4 +1,5 @@
 import { Actor, log } from 'apify';
+import { gotScraping } from 'got-scraping';
 import {
   canonicalizeUrl,
   deduplicateItems,
@@ -22,6 +23,11 @@ const DEFAULTS = {
   requestTimeoutSecs: 25,
   maxConcurrency: 5,
   maxPagesPerRestaurant: 3,
+  proxyConfiguration: {
+    useApifyProxy: true,
+    apifyProxyGroups: ['RESIDENTIAL'],
+    apifyProxyCountry: 'US',
+  },
   minimumPriceChangePercent: 0,
   keywords: [],
   eventTypes: [],
@@ -58,28 +64,37 @@ async function safeCharge(eventName, count = 1) {
   }
 }
 
-async function fetchHtml(url, input) {
-  const response = await fetch(url, {
-    redirect: 'follow',
-    signal: AbortSignal.timeout(input.requestTimeoutSecs * 1000),
+async function fetchHtml(url, input, proxyConfiguration) {
+  const sessionId = `menu_${sha256(new URL(url).hostname).slice(0, 24)}`;
+  const proxyUrl = proxyConfiguration ? await proxyConfiguration.newUrl(sessionId) : undefined;
+  const response = await gotScraping({
+    url,
+    proxyUrl,
+    followRedirect: true,
+    maxRedirects: 5,
+    throwHttpErrors: false,
+    retry: { limit: 1 },
+    timeout: { request: input.requestTimeoutSecs * 1000 },
     headers: {
       accept: 'text/html,application/xhtml+xml',
-      'user-agent': 'MenuShift/1.1 (+https://apify.com; public menu intelligence monitor)',
+      'accept-language': 'en-US,en;q=0.9',
     },
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const contentType = response.headers.get('content-type') ?? '';
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw new Error(`HTTP ${response.statusCode}`);
+  }
+  const contentType = String(response.headers['content-type'] ?? '');
   if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) {
     throw new Error(`Unsupported content type: ${contentType || 'unknown'}`);
   }
-  const declaredBytes = Number(response.headers.get('content-length') ?? 0);
+  const declaredBytes = Number(response.headers['content-length'] ?? 0);
   if (declaredBytes > 5_000_000) throw new Error('Menu page exceeds the 5 MB safety limit.');
-  const html = await response.text();
+  const html = response.body;
   if (Buffer.byteLength(html) > 5_000_000) throw new Error('Menu page exceeds the 5 MB safety limit.');
   return { html, finalUrl: response.url || url };
 }
 
-async function inspectRestaurant(restaurantUrl, input) {
+async function inspectRestaurant(restaurantUrl, input, proxyConfiguration) {
   const queue = [restaurantUrl];
   const visited = new Set();
   const collected = [];
@@ -93,7 +108,7 @@ async function inspectRestaurant(restaurantUrl, input) {
     visited.add(canonical);
 
     try {
-      const { html, finalUrl } = await fetchHtml(canonical, input);
+      const { html, finalUrl } = await fetchHtml(canonical, input, proxyConfiguration);
       restaurantName ||= extractRestaurantName(html);
       const pageItems = parseMenuDocument(html, input.currencyFallback)
         .map((item) => ({ ...item, sourceUrl: finalUrl }));
@@ -125,6 +140,9 @@ await Actor.init();
 
 try {
   const input = validateInput({ ...DEFAULTS, ...(await Actor.getInput()) });
+  const proxyConfiguration = input.proxyConfiguration
+    ? await Actor.createProxyConfiguration(input.proxyConfiguration)
+    : undefined;
   const store = await Actor.openKeyValueStore(storeName(input.monitorKey));
   const detectedAt = new Date().toISOString();
   const allChanges = [];
@@ -136,7 +154,7 @@ try {
 
   await mapConcurrent(input.restaurantUrls, input.maxConcurrency, async (restaurantUrl) => {
     try {
-      const result = await inspectRestaurant(restaurantUrl, input);
+      const result = await inspectRestaurant(restaurantUrl, input, proxyConfiguration);
       const key = stateKey(restaurantUrl);
       const previous = await store.getValue(key);
       const snapshot = {
