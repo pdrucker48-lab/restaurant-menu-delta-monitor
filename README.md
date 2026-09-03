@@ -80,7 +80,7 @@ npm test
 npm run smoke
 ```
 
-The unit suite covers JSON-LD, public application-state extraction, rendered ordering rows, international prices, all change classes, severity, and filtering. The live Apify validation baseline parsed 203 items across three public Toast menus (92, 36, and 75 items), and an immediate second run checked all three with zero false changes.
+The unit suite covers JSON-LD, public application-state extraction, rendered ordering rows, international prices, all change classes, severity, and filtering. In the live 10-site Toast validation, the first run parsed 7/10 menus and 998 items; the immediate second run parsed 8/10 and emitted zero raw or matched changes. A focused three-site check also parsed all three and stayed quiet on its second run.
 
 ## Responsible use
 
