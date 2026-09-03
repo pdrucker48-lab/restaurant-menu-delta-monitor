@@ -1,5 +1,6 @@
 import { Actor, log } from 'apify';
 import { gotScraping } from 'got-scraping';
+import { chromium } from 'playwright';
 import {
   canonicalizeUrl,
   deduplicateItems,
@@ -23,6 +24,8 @@ const DEFAULTS = {
   requestTimeoutSecs: 25,
   maxConcurrency: 5,
   maxPagesPerRestaurant: 3,
+  useBrowserFallback: true,
+  renderWaitSecs: 3,
   proxyConfiguration: {
     useApifyProxy: true,
     apifyProxyGroups: ['RESIDENTIAL'],
@@ -94,7 +97,53 @@ async function fetchHtml(url, input, proxyConfiguration) {
   return { html, finalUrl: response.url || url };
 }
 
-async function inspectRestaurant(restaurantUrl, input, proxyConfiguration) {
+async function launchRenderedBrowser(proxyConfiguration) {
+  const proxyUrl = proxyConfiguration
+    ? await proxyConfiguration.newUrl('menushift_browser')
+    : null;
+  let proxy;
+  if (proxyUrl) {
+    const parsed = new URL(proxyUrl);
+    proxy = {
+      server: `${parsed.protocol}//${parsed.hostname}:${parsed.port}`,
+      username: decodeURIComponent(parsed.username),
+      password: decodeURIComponent(parsed.password),
+    };
+  }
+  return chromium.launch({
+    headless: true,
+    proxy,
+    args: ['--disable-dev-shm-usage'],
+  });
+}
+
+async function renderHtml(url, input, browser) {
+  const context = await browser.newContext({
+    locale: 'en-US',
+    timezoneId: 'America/New_York',
+  });
+  try {
+    const page = await context.newPage();
+    await page.route('**/*', async (route) => {
+      const resourceType = route.request().resourceType();
+      if (['font', 'image', 'media'].includes(resourceType)) await route.abort();
+      else await route.continue();
+    });
+    const response = await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: input.requestTimeoutSecs * 1000,
+    });
+    if (response && response.status() >= 400) throw new Error(`Browser HTTP ${response.status()}`);
+    await page.waitForTimeout(input.renderWaitSecs * 1000);
+    const html = await page.content();
+    if (Buffer.byteLength(html) > 10_000_000) throw new Error('Rendered menu page exceeds the 10 MB safety limit.');
+    return { html, finalUrl: page.url() || url };
+  } finally {
+    await context.close();
+  }
+}
+
+async function inspectRestaurant(restaurantUrl, input, proxyConfiguration, getRenderedBrowser) {
   const queue = [restaurantUrl];
   const visited = new Set();
   const collected = [];
@@ -108,12 +157,28 @@ async function inspectRestaurant(restaurantUrl, input, proxyConfiguration) {
     visited.add(canonical);
 
     try {
-      const { html, finalUrl } = await fetchHtml(canonical, input, proxyConfiguration);
+      let document;
+      let transport = 'http';
+      try {
+        document = await fetchHtml(canonical, input, proxyConfiguration);
+      } catch (error) {
+        if (!input.useBrowserFallback) throw error;
+        document = await renderHtml(canonical, input, await getRenderedBrowser());
+        transport = 'browser';
+      }
+
+      let { html, finalUrl } = document;
+      let pageItems = parseMenuDocument(html, input.currencyFallback);
+      if (!pageItems.length && input.useBrowserFallback && transport !== 'browser') {
+        ({ html, finalUrl } = await renderHtml(canonical, input, await getRenderedBrowser()));
+        pageItems = parseMenuDocument(html, input.currencyFallback);
+        transport = 'browser';
+      }
       restaurantName ||= extractRestaurantName(html);
-      const pageItems = parseMenuDocument(html, input.currencyFallback)
+      pageItems = pageItems
         .map((item) => ({ ...item, sourceUrl: finalUrl }));
       collected.push(...pageItems);
-      pages.push({ url: finalUrl, itemsFound: pageItems.length, fingerprint: sha256(html) });
+      pages.push({ url: finalUrl, itemsFound: pageItems.length, transport, fingerprint: sha256(html) });
 
       if (visited.size === 1) {
         for (const link of discoverMenuLinks(html, finalUrl, input.maxPagesPerRestaurant - 1)) {
@@ -138,11 +203,17 @@ async function inspectRestaurant(restaurantUrl, input, proxyConfiguration) {
 
 await Actor.init();
 
+let renderedBrowserPromise;
+
 try {
   const input = validateInput({ ...DEFAULTS, ...(await Actor.getInput()) });
   const proxyConfiguration = input.proxyConfiguration
     ? await Actor.createProxyConfiguration(input.proxyConfiguration)
     : undefined;
+  const getRenderedBrowser = async () => {
+    renderedBrowserPromise ||= launchRenderedBrowser(proxyConfiguration);
+    return renderedBrowserPromise;
+  };
   const store = await Actor.openKeyValueStore(storeName(input.monitorKey));
   const detectedAt = new Date().toISOString();
   const allChanges = [];
@@ -154,7 +225,7 @@ try {
 
   await mapConcurrent(input.restaurantUrls, input.maxConcurrency, async (restaurantUrl) => {
     try {
-      const result = await inspectRestaurant(restaurantUrl, input, proxyConfiguration);
+      const result = await inspectRestaurant(restaurantUrl, input, proxyConfiguration, getRenderedBrowser);
       const key = stateKey(restaurantUrl);
       const previous = await store.getValue(key);
       const snapshot = {
@@ -273,5 +344,6 @@ try {
     if (!response.ok) throw new Error(`Webhook returned HTTP ${response.status}.`);
   }
 } finally {
+  if (renderedBrowserPromise) await (await renderedBrowserPromise).close();
   await Actor.exit();
 }
