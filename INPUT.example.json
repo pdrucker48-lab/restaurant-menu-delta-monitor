@@ -1,16 +1,24 @@
 {
   "restaurantUrls": [
-    "https://restaurant.example/menu"
+    "https://famousrestaurant.toast.site/order/famous-restaurant",
+    "https://restaurantconstance.toast.site/order"
   ],
   "monitorKey": "competitor-watch",
   "currencyFallback": "USD",
-  "maxPagesPerRestaurant": 3,
+  "maxPagesPerRestaurant": 1,
   "minimumPriceChangePercent": 2,
   "keywords": [],
   "eventTypes": [],
   "emitBaseline": false,
   "emitFullSnapshot": false,
+  "proxyConfiguration": {
+    "useApifyProxy": true,
+    "apifyProxyGroups": ["RESIDENTIAL"],
+    "apifyProxyCountry": "US"
+  },
+  "useBrowserFallback": true,
+  "renderWaitSecs": 3,
   "webhookUrl": null,
   "requestTimeoutSecs": 25,
-  "maxConcurrency": 5
+  "maxConcurrency": 2
 }
