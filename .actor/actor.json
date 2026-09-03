@@ -8,9 +8,9 @@
   "input": "./input_schema.json",
   "output": "./output_schema.json",
   "changelog": "./CHANGELOG.md",
-  "defaultMemoryMbytes": 512,
-  "minMemoryMbytes": 128,
-  "maxMemoryMbytes": 1024,
+  "defaultMemoryMbytes": 1024,
+  "minMemoryMbytes": 512,
+  "maxMemoryMbytes": 4096,
   "storages": {
     "dataset": "./dataset_schema.json"
   }
