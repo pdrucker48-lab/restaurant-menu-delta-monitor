@@ -45,6 +45,17 @@
       "default": false,
       "editor": "checkbox"
     },
+    "proxyConfiguration": {
+      "title": "Proxy configuration",
+      "type": "object",
+      "description": "Residential proxy access is recommended for modern ordering platforms that block data-center traffic. Proxy traffic is billed by Apify.",
+      "editor": "proxy",
+      "default": {
+        "useApifyProxy": true,
+        "apifyProxyGroups": ["RESIDENTIAL"],
+        "apifyProxyCountry": "US"
+      }
+    },
     "maxPagesPerRestaurant": {
       "title": "Pages per restaurant",
       "type": "integer",
@@ -100,7 +111,7 @@
       "title": "Maximum concurrency",
       "type": "integer",
       "description": "Maximum number of restaurant websites checked at the same time.",
-      "default": 5,
+      "default": 2,
       "minimum": 1,
       "maximum": 20,
       "editor": "number"
