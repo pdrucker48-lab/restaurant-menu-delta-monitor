@@ -56,6 +56,22 @@
         "apifyProxyCountry": "US"
       }
     },
+    "useBrowserFallback": {
+      "title": "Render JavaScript menus",
+      "type": "boolean",
+      "description": "Automatically open JavaScript-only menus in a browser when fast HTML extraction returns no items.",
+      "default": true,
+      "editor": "checkbox"
+    },
+    "renderWaitSecs": {
+      "title": "JavaScript render wait",
+      "type": "integer",
+      "description": "Seconds to wait after the menu page loads so dynamic menu items can appear.",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "editor": "number"
+    },
     "maxPagesPerRestaurant": {
       "title": "Pages per restaurant",
       "type": "integer",
