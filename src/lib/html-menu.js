@@ -16,6 +16,17 @@ const ITEM_SELECTORS = [
   '[class*="menuItem"]',
 ].join(',');
 
+const RENDERED_ITEM_SELECTORS = [
+  'button',
+  '[role="button"]',
+  'article',
+  'li',
+  '[data-testid*="item"]',
+  '[class*="product"]',
+].join(',');
+
+const PRICE_PATTERN = /(?:[$£€]\s*\d{1,4}(?:[.,]\d{2})?|\d{1,4}(?:[.,]\d{2})\s*(?:USD|CAD|GBP|EUR))/i;
+
 function textFrom($root, selectors) {
   for (const selector of selectors) {
     const value = normalizeText($root.find(selector).first().text());
@@ -57,11 +68,57 @@ export function extractHtmlMenu(html, currencyFallback = 'USD') {
   return deduplicateItems(items);
 }
 
+export function extractRenderedTextMenu(html, currencyFallback = 'USD') {
+  const $ = cheerio.load(html);
+  const items = [];
+  $(RENDERED_ITEM_SELECTORS).each((_, element) => {
+    const root = $(element);
+    const text = normalizeText(root.text());
+    if (text.length < 4 || text.length > 500) return;
+    const priceText = text.match(PRICE_PATTERN)?.[0];
+    if (!priceText) return;
+
+    const explicitName = textFrom(root, [
+      '[data-testid*="name"]',
+      '[class*="name"]',
+      'h2',
+      'h3',
+      'h4',
+    ]);
+    const segments = root.text().split(/\n+/).map(normalizeText).filter(Boolean);
+    const inferredName = segments.find((segment) => (
+      !PRICE_PATTERN.test(segment)
+      && !/^(add|order|select|customize|unavailable|sold out)$/i.test(segment)
+      && segment.length >= 2
+      && segment.length <= 120
+    ));
+    const name = explicitName || inferredName;
+    if (!name || PRICE_PATTERN.test(name)) return;
+
+    const description = textFrom(root, [
+      '[data-testid*="description"]',
+      '[class*="description"]',
+      'p',
+    ]);
+    items.push({
+      name,
+      description,
+      category: inferCategory($, element),
+      ...normalizePrice(priceText, currencyFallback),
+      availability: normalizeAvailability(text),
+      sourceId: root.attr('data-item-id') || root.attr('data-testid') || root.attr('id') || '',
+      source: 'rendered-text',
+    });
+  });
+  return deduplicateItems(items);
+}
+
 export function parseMenuDocument(html, currencyFallback = 'USD') {
   const jsonLd = extractJsonLdMenus(html, currencyFallback);
   const embeddedJson = extractEmbeddedJsonMenus(html, currencyFallback);
   const htmlItems = extractHtmlMenu(html, currencyFallback);
-  return deduplicateItems([...jsonLd, ...embeddedJson, ...htmlItems]);
+  const renderedText = extractRenderedTextMenu(html, currencyFallback);
+  return deduplicateItems([...jsonLd, ...embeddedJson, ...htmlItems, ...renderedText]);
 }
 
 export function discoverMenuLinks(html, baseUrl, limit = 3) {
